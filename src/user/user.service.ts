@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Db, ObjectID } from 'mongodb';
+import { Observable } from 'rxjs';
 import { User } from 'src/user.interface';
 
 @Injectable()
@@ -9,16 +10,16 @@ export class UserService {
         private db: Db,
     ) { }
 
-    async find(): Promise<User[]> {
-        return await this.db.collection('users').find().toArray();
+    public find(): Observable<User[]> {
+        return this.db.collection('users').find().toArray();
     }
 
-    async findOne(id: string): Promise<User> {
+    public findOne(id: string): Observable<User> {
         if (!ObjectID.isValid(id)) {
             throw new BadRequestException;
         }
 
-        const response = await this.db.collection('users').findOne({
+        const response = this.db.collection('users').findOne({
             _id: new ObjectID(id),
         });
 
@@ -29,16 +30,16 @@ export class UserService {
         return response;
     }
 
-    async create(body: User): Promise<void> {
-        await this.db.collection('users').insert(body);
+    public create(body: User): Observable<void> {
+        return this.db.collection('users').insert(body);
     }
 
-    async update(id: string, body: User): Promise<void> {
+    public update(id: string, body: User): Observable<void> {
         if (!ObjectID.isValid(id)) {
             throw new BadRequestException;
         }
 
-        await this.db.collection('users').updateOne(
+        return this.db.collection('users').updateOne(
             {
                 _id: new ObjectID(id),
             },
@@ -50,17 +51,19 @@ export class UserService {
         );
     }
 
-    async delete(id: string): Promise<void> {
+    public delete(id: string): Observable<void> {
         if (!ObjectID.isValid(id)) {
             throw new BadRequestException;
         }
 
-        const response = await this.db.collection('users').deleteOne({
+        const response = this.db.collection('users').deleteOne({
             _id: new ObjectID(id),
         });
 
         if (response.deletedCount === 0) {
             throw new NotFoundException;
         }
+
+        return response;
     }
 }
